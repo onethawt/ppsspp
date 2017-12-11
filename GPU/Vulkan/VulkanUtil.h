@@ -157,6 +157,7 @@ private:
 
 	struct FrameData {
 		VkDescriptorPool descPool;
+		int numDescriptors;
 	};
 	FrameData frameData_[VulkanContext::MAX_INFLIGHT_FRAMES];
 
