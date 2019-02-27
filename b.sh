@@ -20,6 +20,8 @@ do
 			TARGET_OS=Android
 			PACKAGE=1
 			;;
+		--egl) CMAKE_ARGS="-DUSING_EGL=ON ${CMAKE_ARGS}"
+			;;
 		--simulator) echo "Simulator mode enabled"
 			CMAKE_ARGS="-DSIMULATOR=ON ${CMAKE_ARGS}"
 			;;

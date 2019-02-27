@@ -55,7 +55,7 @@ int CheckEGLErrors(const char *file, int line) {
 
 #define EGL_ERROR(str, check) { \
 		if (check) CheckEGLErrors( __FILE__, __LINE__ ); \
-		printf("EGL ERROR: " str "\n"); \
+		printf("EGL ERROR: %s\n", str); \
 		return 1; \
 	}
 
@@ -156,6 +156,7 @@ EGLConfig EGL_FindConfig(int *contextVersion) {
 		score += surfaceScore;
 #endif
 
+		printf("colorScore: %d alphaScore: %d\n", colorScore, alphaScore);
 		if (score > bestScore) {
 			bestScore = score;
 			best = config;
@@ -167,7 +168,7 @@ EGLConfig EGL_FindConfig(int *contextVersion) {
 	return best;
 }
 
-int8_t EGL_Init() {
+int8_t EGL_Init(SDL_Window *window) {
 	int contextVersion = 0;
 	EGLConfig eglConfig = EGL_FindConfig(&contextVersion);
 	if (!eglConfig) {
@@ -191,21 +192,23 @@ int8_t EGL_Init() {
 
 #if !defined(USING_FBDEV) && !defined(__APPLE__)
 	// Get the SDL window handle
-	SDL_SysWMinfo sysInfo; //Will hold our Window information
+	SDL_SysWMinfo sysInfo{}; //Will hold our Window information
 	SDL_VERSION(&sysInfo.version); //Set SDL version
+	SDL_GetWindowWMInfo(window, &sysInfo);
 	g_Window = (NativeWindowType)sysInfo.info.x11.window;
 #else
 	g_Window = (NativeWindowType)NULL;
 #endif
 	g_eglSurface = eglCreateWindowSurface(g_eglDisplay, eglConfig, g_Window, nullptr);
 	if (g_eglSurface == EGL_NO_SURFACE) {
-		EGL_ERROR("Unable to create EGL surface!", true);
+		char temp[256];
+		snprintf(temp, sizeof(temp), "Unable to create EGL surface for window %p!", (void *)g_Window);
+		EGL_ERROR(temp, true);
 		return 1;
 	}
 
 	if (eglMakeCurrent(g_eglDisplay, g_eglSurface, g_eglSurface, g_eglContext) != EGL_TRUE) {
 		EGL_ERROR("Unable to make GLES context current.", true);
-		return 1;
 	}
 
 	return 0;
@@ -237,6 +240,7 @@ void EGL_Close() {
 
 // Returns 0 on success.
 int SDLGLGraphicsContext::Init(SDL_Window *&window, int x, int y, int mode, std::string *error_message) {
+#ifndef USING_EGL
 	struct GLVersionPair {
 		int major;
 		int minor;
@@ -310,30 +314,37 @@ int SDLGLGraphicsContext::Init(SDL_Window *&window, int x, int y, int mode, std:
 			return 2;
 		}
 	}
+#else
+	window = SDL_CreateWindow("PPSSPP", x,y, pixel_xres, pixel_yres, mode);
+#endif
 
 	// At this point, we have a window that we can show finally.
 	SDL_ShowWindow(window);
 
 #ifdef USING_EGL
-	if (EGL_Init() != 0) {
+	if (glContext == 0 && EGL_Init(window) != 0) {
 		printf("EGL_Init() failed\n");
 		return 1;
 	}
 #endif
 
-#ifndef USING_GLES2
+#if !defined(USING_GLES2)
 	// Some core profile drivers elide certain extensions from GL_EXTENSIONS/etc.
 	// glewExperimental allows us to force GLEW to search for the pointers anyway.
 	if (gl_extensions.IsCoreContext) {
 		glewExperimental = true;
 	}
-	if (GLEW_OK != glewInit()) {
-		printf("Failed to initialize glew!\n");
+
+	int glew_ret = glewInit();
+	if (GLEW_OK != glew_ret) {
+		printf("Failed to initialize glew! %d\n", glew_ret);
 		return 1;
 	}
+
 	// Unfortunately, glew will generate an invalid enum error, ignore.
-	if (gl_extensions.IsCoreContext)
+	if (gl_extensions.IsCoreContext) {
 		glGetError();
+	}
 
 	if (GLEW_VERSION_2_0) {
 		printf("OpenGL 2.0 or higher.\n");
