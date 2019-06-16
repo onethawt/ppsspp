@@ -25,6 +25,9 @@
 #include "GPU/Vulkan/VulkanUtil.h"
 #include "GPU/Vulkan/StateMappingVulkan.h"
 
+struct VKRGraphicsPipeline;
+class VulkanRenderManager;
+
 // PSP vertex format.
 enum class PspAttributeLocation {
 	POSITION = 0,
@@ -63,7 +66,7 @@ enum PipelineFlags {
 
 // Simply wraps a Vulkan pipeline, providing some metadata.
 struct VulkanPipeline {
-	VkPipeline pipeline;
+	VKRGraphicsPipeline *pipeline;
 	int flags;  // PipelineFlags enum above.
 
 	// Convenience.
@@ -82,7 +85,7 @@ public:
 	PipelineManagerVulkan(VulkanContext *ctx);
 	~PipelineManagerVulkan();
 
-	VulkanPipeline *GetOrCreatePipeline(VkPipelineLayout layout, VkRenderPass renderPass, const VulkanPipelineRasterStateKey &rasterKey, const DecVtxFormat *decFmt, VulkanVertexShader *vs, VulkanFragmentShader *fs, bool useHwTransform);
+	VulkanPipeline *GetOrCreatePipeline(VulkanRenderManager *renderManager, VkPipelineLayout layout, VkRenderPass renderPass, const VulkanPipelineRasterStateKey &rasterKey, const DecVtxFormat *decFmt, VulkanVertexShader *vs, VulkanFragmentShader *fs, bool useHwTransform);
 	int GetNumPipelines() const { return (int)pipelines_.size(); }
 
 	void Clear();

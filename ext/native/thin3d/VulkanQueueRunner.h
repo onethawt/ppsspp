@@ -8,6 +8,8 @@
 #include "thin3d/DataFormat.h"
 
 class VKRFramebuffer;
+struct VKRGraphicsPipeline;
+struct VKRComputePipeline;
 struct VKRImage;
 
 enum {
@@ -17,7 +19,9 @@ enum {
 
 enum class VKRRenderCommand : uint8_t {
 	REMOVED,
-	BIND_PIPELINE,
+	BIND_PIPELINE,  // raw pipeline
+	BIND_GRAPHICS_PIPELINE,  // async
+	BIND_COMPUTE_PIPELINE,  // async
 	STENCIL,
 	BLEND,
 	VIEWPORT,
@@ -35,6 +39,12 @@ struct VkRenderData {
 		struct {
 			VkPipeline pipeline;
 		} pipeline;
+		struct {
+			VKRGraphicsPipeline *pipeline;
+		} graphics_pipeline;
+		struct {
+			VKRComputePipeline *pipeline;
+		} compute_pipeline;
 		struct {
 			VkPipelineLayout pipelineLayout;
 			VkDescriptorSet ds;
