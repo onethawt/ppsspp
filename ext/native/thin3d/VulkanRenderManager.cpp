@@ -29,7 +29,7 @@ bool VKRGraphicsPipeline::Create(VulkanContext *vulkan) {
 	delete desc;
 	desc = nullptr;
 	if (result != VK_SUCCESS) {
-		pipeline = nullptr;
+		pipeline = VK_NULL_HANDLE;
 		return false;
 	}
 	return true;
@@ -46,7 +46,7 @@ bool VKRComputePipeline::Create(VulkanContext *vulkan) {
 	delete desc;
 	desc = nullptr;
 	if (result != VK_SUCCESS) {
-		pipeline = nullptr;
+		pipeline = VK_NULL_HANDLE;
 		return false;
 	}
 	return true;
