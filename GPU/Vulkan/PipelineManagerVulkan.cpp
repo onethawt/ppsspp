@@ -32,7 +32,8 @@ void PipelineManagerVulkan::Clear() {
 
 	pipelines_.Iterate([&](const VulkanPipelineKey &key, VulkanPipeline *value) {
 		if (value->pipeline) {
-			vulkan_->Delete().QueueDeletePipeline(value->pipeline->pipeline);
+			VkPipeline pipeline = value->pipeline->pipeline;
+			vulkan_->Delete().QueueDeletePipeline(pipeline);
 			delete value->pipeline;
 		}
 		delete value;
@@ -535,7 +536,8 @@ void PipelineManagerVulkan::SetLineWidth(float lineWidth) {
 	pipelines_.Iterate([&](const VulkanPipelineKey &key, VulkanPipeline *value) {
 		if (value->UsesLines()) {
 			if (value->pipeline) {
-				vulkan_->Delete().QueueDeletePipeline(value->pipeline->pipeline);
+				VkPipeline pipeline = value->pipeline->pipeline;
+				vulkan_->Delete().QueueDeletePipeline(pipeline);
 				delete value->pipeline;
 			}
 			delete value;
